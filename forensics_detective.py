@@ -85,30 +85,3 @@ class SimpleDetective:
             return {'best_match': None, 'confidence': best['score']}
 
 
-if __name__ == "__main__":
-    def run_folder(folder, detective):
-        for f in sorted(os.listdir(folder)):
-            if f.lower().endswith((".jpg", ".jpeg", ".png")):
-                detective.find_best_match(os.path.join(folder, f))
-
-    print("=" * 50)
-    print("SimpleDetective - Prototype v0.1")
-    print("=" * 50)
-
-    detective = SimpleDetective()
-    detective.register_targets("originals")
-
-    print("\n" + "=" * 50)
-    print("TESTING")
-    print("=" * 50)
-
-    test_images = [
-        "modified_images/modified_00_bright_enhanced.jpg",
-        "modified_images/modified_03_compressed.jpg",
-    ]
-    # Run full folders (this is what you need for results_v1.txt)
-    run_folder("hard", detective)
-
-    print("\n" + "=" * 50)
-    print("PROTOTYPE COMPLETE!")
-    print("=" * 50)

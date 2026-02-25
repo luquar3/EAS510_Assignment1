@@ -59,3 +59,22 @@ Your system should:
 1. Register the 10 original images
 2. For each test image, determine which original it came from (or reject it)
 3. Display transparent reasoning showing how each rule contributed to the decision
+
+## There were 31 instances where the system could not match an image to an original and 22 of these were for template matching. Thus, most of what V1 struggled with was template matching in instances of cropping and resizing. 
+
+Template matching only works well when images are the same size. When images are resized or cropped and rotated, the pixel positions change, so template matching gives a low score. Because of this, Rule 3 sometimes fails to help the system make the correct decision.
+
+Examples: 
+Processing: original_01__resize_scale75__compress__q30__v3.jpg
+Rule 1 (Metadata):  FIRED - Size ratio 0.20 -> 21/30 points
+Rule 2 (Histogram): FIRED - Correlation 0.99 -> 29/30 points
+Rule 3 (Template):  NO MATCH - Match score 0.27 -> 10/40 points
+
+Processing: original_01__crop_keep50__resized__q75__v6.jpg
+Rule 1 (Metadata):  FIRED - Size ratio 0.81 -> 28/30 points
+Rule 2 (Histogram): FIRED - Correlation 0.83 -> 24/30 points
+Rule 3 (Template):  NO MATCH - Match score 0.10 -> 4/40 points
+Final Score: 56/100 -> MATCH to original_01.jpg
+
+For rule 4 I chose ORB, because it is a feature matching method that works well for resized and rotated images.
+
