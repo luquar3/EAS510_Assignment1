@@ -120,37 +120,36 @@ def rule3_template(target_info, input_path):
 
     return score, fired, evidence
 
-def rule4_edges(target_info, input_path):
-    """Rule 4: Edge-based similarity using Canny edge detection."""
-
-    # Load grayscale images
+def rule4_orb(target_info, input_path):
+    """Rule 4: ORB keypoint matching (more robust to resize/rotation/crop)."""
     target = cv2.imread(target_info["path"], cv2.IMREAD_GRAYSCALE)
     inp = cv2.imread(input_path, cv2.IMREAD_GRAYSCALE)
 
     if target is None or inp is None:
         return 0, False, "Could not load images"
 
-    # Resize both images to the same size to compare structure
-    # (This avoids the scale problem that broke Rule 3)
-    target_resized = cv2.resize(target, (300, 300))
-    input_resized = cv2.resize(inp, (300, 300))
+    orb = cv2.ORB_create(nfeatures=1000)
+    kp1, des1 = orb.detectAndCompute(target, None)
+    kp2, des2 = orb.detectAndCompute(inp, None)
 
-    # Detect edges
-    edges_target = cv2.Canny(target_resized, 100, 200)
-    edges_input = cv2.Canny(input_resized, 100, 200)
+    if des1 is None or des2 is None:
+        return 0, False, "No descriptors"
 
-    # Compare edges using normalized correlation
-    similarity = np.corrcoef(
-        edges_target.flatten(),
-        edges_input.flatten()
-    )[0, 1]
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = bf.match(des1, des2)
 
-    if np.isnan(similarity):
-        similarity = 0
+    if not matches:
+        return 0, False, "0 matches"
 
-    # Convert similarity → score (0–40 points)
-    score = int(max(0, similarity) * 40)
-    fired = similarity > 0.3
-    evidence = f"Edge similarity {similarity:.2f}"
+    # Sort matches by distance (lower is better)
+    matches = sorted(matches, key=lambda m: m.distance)
+
+    good = [m for m in matches if m.distance < 60]  # threshold you can tune
+    good_count = len(good)
+
+    # Convert count into 0-40 score (cap at 40)
+    score = min(40, int(good_count / 25 * 40))  # 25 good matches => ~40 points
+    fired = good_count >= 10
+    evidence = f"Good matches {good_count}"
 
     return score, fired, evidence
